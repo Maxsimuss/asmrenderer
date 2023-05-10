@@ -54,13 +54,9 @@ RenderContext: db qword 0
 
 ViewportArgs: dd 0.0, 0.0, 20.0, 20.0
 
-VertexPos: dd 0.0, 0.5
 Color: dd 1.0, 0.0, 0.0
 
 FrameIndex: db qword 0
-Const1000: dd 100.0
-Const120: dd 2.0943951
-Const240: dd 4.1887902
 
 ; ////////////////////////////////////////////////
 
@@ -73,6 +69,17 @@ Const240: dd 4.1887902
 %macro leave 0
 	mov rsp, rbp
 	pop rbp
+%endmacro
+
+FloatTemp: dd 0.0
+%macro fldimm 1
+	mov dword [VA(FloatTemp)], __float32__(%1)
+	fld dword [VA(FloatTemp)]
+%endmacro
+
+%macro movimm 2
+	mov dword [VA(FloatTemp)], __float32__(%2)
+	movq %1, [VA(FloatTemp)]
 %endmacro
 
 %macro ThrowErr 1
@@ -135,25 +142,27 @@ START
 		inc qword [VA(FrameIndex)]
 
 		fild qword [VA(FrameIndex)]
-		fld dword [VA(Const1000)]
+		fldimm 10000.0
 		fdivp
 		fsin
 		fabs
 		fstp dword [VA(Color)]
-
+		
 		fild qword [VA(FrameIndex)]
-		fld dword [VA(Const1000)]
+		fldimm 10000.0
 		fdivp
-		fld dword [VA(Const120)]
+		fldimm 2.0943951
 		faddp
 		fsin
 		fabs
 		fstp dword [VA(Color + 4)]
 
 		fild qword [VA(FrameIndex)]
-		fld dword [VA(Const1000)]
+
+
+		fldimm 10000.0
 		fdivp
-		fld dword [VA(Const240)]
+		fldimm 4.1887902
 		faddp
 		fsin
 		fabs
@@ -179,14 +188,11 @@ START
 		; call [VA(glGetError)]
 
 
-		mov rcx, __float32__(0.1)
-		movq xmm0, rcx
-		mov rdx, __float32__(0.15)
-		movq xmm1, rdx
-		mov r8, __float32__(0.2)
-		movq xmm2, r8
-		mov r9, __float32__(1.0)
-		movq xmm3, r9
+		movimm xmm0, 0.1
+		movimm xmm1, 0.15
+		movimm xmm2, 0.2
+		movimm xmm3, 1.0
+
 		call [VA(glClearColor)]
 		mov rcx, 0x00004000
 		call [VA(glClear)]
@@ -205,20 +211,26 @@ START
 		movd xmm2, [VA(Color + 8)]
 		call [VA(glColor3f)]
 
-		movd xmm0, [VA(VertexPos)]
-		movd xmm1, [VA(VertexPos)]
+		movimm xmm0, -0.5
+		movimm xmm1, -0.5
 		call [VA(glVertex2f)]
-
-		movd xmm0, [VA(VertexPos + 4)]
-		movd xmm1, [VA(VertexPos)]
+		movimm xmm0, 0.5
+		movimm xmm1, -0.5
 		call [VA(glVertex2f)]
-
-		movd xmm0, [VA(VertexPos + 4)]
-		movd xmm1, [VA(VertexPos + 4)]
+		movimm xmm0, 0.5
+		movimm xmm1, 0.5
+		call [VA(glVertex2f)]
+		movimm xmm0, -0.5
+		movimm xmm1, -0.5
+		call [VA(glVertex2f)]
+		movimm xmm0, -0.5
+		movimm xmm1, 0.5
+		call [VA(glVertex2f)]
+		movimm xmm0, 0.5
+		movimm xmm1, 0.5
 		call [VA(glVertex2f)]
 
 		call [VA(glEnd)]
-
 skipDraw:
 
 
